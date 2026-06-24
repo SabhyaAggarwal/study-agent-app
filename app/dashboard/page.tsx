@@ -7,6 +7,8 @@ import {
 } from "@/lib/concept-utils";
 import { createClient } from "@/lib/supabase";
 
+export const dynamic = "force-dynamic";
+
 function StatsCard({ label, value }: { label: string; value: string | number }) {
   return (
     <div className="rounded-[2rem] border border-slate-800 bg-slate-900/95 px-6 py-5 shadow-2xl shadow-slate-950/40">
@@ -17,13 +19,27 @@ function StatsCard({ label, value }: { label: string; value: string | number }) 
 }
 
 export default async function DashboardPage() {
-  const supabase = createClient();
-  const { data, error } = await supabase
-    .from("concepts")
-    .select("*")
-    .order("last_updated", { ascending: false });
+  let concepts: Concept[] = [];
+  let error: { message: string } | null = null;
 
-  const concepts = (data ?? []) as Concept[];
+  try {
+    const supabase = createClient();
+    const result = await supabase
+      .from("concepts")
+      .select("*")
+      .order("last_updated", { ascending: false });
+
+    concepts = (result.data ?? []) as Concept[];
+    error = result.error;
+  } catch (err) {
+    error = {
+      message:
+        err instanceof Error
+          ? err.message
+          : "Supabase is not configured. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY.",
+    };
+  }
+
   const totalConcepts = concepts.length;
   const uniqueSubjects = getUniqueSubjectCount(concepts);
   const averageMastery = getAverageMasteryPercent(concepts);

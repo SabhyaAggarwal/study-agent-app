@@ -1,24 +1,7 @@
 import { NextResponse } from "next/server";
-import { streamText, createTextStreamResponse } from "ai";
-import { createClient as createSupabaseClient } from "@supabase/supabase-js";
+import { createClient, getAnthropicAuthToken } from "@/lib/supabase";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-const anthropicAuthToken = process.env.ANTHROPIC_API_KEY || process.env.ANTHROPIC_AUTH_TOKEN;
-
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error(
-    "Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY environment variables"
-  );
-}
-
-if (!anthropicAuthToken) {
-  throw new Error(
-    "Missing ANTHROPIC_API_KEY or ANTHROPIC_AUTH_TOKEN environment variable"
-  );
-}
-
-const supabase = createSupabaseClient(supabaseUrl, supabaseAnonKey);
+const ANTHROPIC_API = "https://api.anthropic.com/v1/messages";
 
 function buildSystemPrompt(
   subject: string | null,
@@ -70,6 +53,15 @@ function buildSystemPrompt(
 }
 
 export async function POST(request: Request) {
+  const authToken = getAnthropicAuthToken();
+
+  if (!authToken) {
+    return NextResponse.json(
+      { error: "Missing ANTHROPIC_API_KEY or ANTHROPIC_AUTH_TOKEN environment variable" },
+      { status: 500 }
+    );
+  }
+
   const body = await request.json().catch(() => null);
 
   if (
@@ -89,46 +81,111 @@ export async function POST(request: Request) {
   let row: { mastery_level: string | null; weak_areas: string | null; strong_areas: string | null; } | null = null;
 
   if (subject && concept) {
-    const { data, error } = await supabase
-      .from("concepts")
-      .select("mastery_level, weak_areas, strong_areas")
-      .eq("subject", subject)
-      .eq("concept", concept)
-      .limit(1)
-      .single();
+    try {
+      const supabase = createClient();
+      const { data, error } = await supabase
+        .from("concepts")
+        .select("mastery_level, weak_areas, strong_areas")
+        .eq("subject", subject)
+        .eq("concept", concept)
+        .limit(1)
+        .single();
 
-    if (error && error.code !== "PGRST116") {
-      return NextResponse.json({ error: "Failed to query concept data." }, { status: 500 });
-    }
+      if (error && error.code !== "PGRST116") {
+        return NextResponse.json({ error: "Failed to query concept data." }, { status: 500 });
+      }
 
-    if (data) {
-      row = {
-        mastery_level: data.mastery_level ?? null,
-        weak_areas: data.weak_areas ?? null,
-        strong_areas: data.strong_areas ?? null,
-      };
+      if (data) {
+        row = {
+          mastery_level: data.mastery_level ?? null,
+          weak_areas: data.weak_areas ?? null,
+          strong_areas: data.strong_areas ?? null,
+        };
+      }
+    } catch (error) {
+      console.error("Supabase configuration error:", error);
+      return NextResponse.json(
+        { error: "Supabase is not configured. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY." },
+        { status: 500 }
+      );
     }
   }
 
   const systemPrompt = buildSystemPrompt(subject, concept, row);
   const userPrompt = `Student asks: ${body.userMessage}`;
 
-  const result = await streamText({
-    model: "claude-sonnet-4-20250514",
-    system: systemPrompt,
-    prompt: userPrompt,
-    providerOptions: {
-      anthropic: {
-        authToken: anthropicAuthToken,
-      },
+  const anthropicResponse = await fetch(ANTHROPIC_API, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-api-key": authToken,
+      "anthropic-version": "2023-06-01",
     },
-    onChunk: () => {},
-    onError: () => {},
+    body: JSON.stringify({
+      model: "claude-sonnet-4-20250514",
+      max_tokens: 4096,
+      system: systemPrompt,
+      messages: [{ role: "user", content: userPrompt }],
+      stream: true,
+    }),
   });
 
-  return createTextStreamResponse({
-    textStream: result.textStream,
+  if (!anthropicResponse.ok) {
+    const err = await anthropicResponse.text();
+    console.error("Anthropic API error:", err);
+    return NextResponse.json({ error: "Failed to get response from AI" }, { status: 500 });
+  }
+
+  const encoder = new TextEncoder();
+  const decoder = new TextDecoder();
+
+  const stream = new ReadableStream({
+    async start(controller) {
+      const reader = anthropicResponse.body?.getReader();
+      if (!reader) {
+        controller.close();
+        return;
+      }
+
+      let buffer = "";
+
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split("\n");
+          buffer = lines.pop() ?? "";
+
+          for (const line of lines) {
+            if (line.startsWith("data: ")) {
+              try {
+                const parsed = JSON.parse(line.slice(6));
+                if (
+                  parsed.type === "content_block_delta" &&
+                  parsed.delta?.type === "text_delta"
+                ) {
+                  controller.enqueue(encoder.encode(parsed.delta.text));
+                }
+              } catch {
+                // skip malformed JSON
+              }
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Stream error:", error);
+      } finally {
+        reader.releaseLock();
+        controller.close();
+      }
+    },
+  });
+
+  return new Response(stream, {
     headers: {
+      "Content-Type": "text/plain; charset=utf-8",
       "Cache-Control": "no-cache",
     },
   });
