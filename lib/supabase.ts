@@ -13,6 +13,6 @@ export function createClient(): SupabaseClient {
   return createSupabaseClient(supabaseUrl, supabaseAnonKey);
 }
 
-export function getAnthropicAuthToken(): string | undefined {
-  return process.env.ANTHROPIC_API_KEY || process.env.ANTHROPIC_AUTH_TOKEN;
+export function getAIAuthToken(): string | undefined {
+  return process.env.NVIDIA_API_KEY;
 }

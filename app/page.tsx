@@ -2,6 +2,8 @@
 
 import { NavBar } from "@/components/nav-bar";
 import { useEffect, useMemo, useRef, useState } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 type Message = {
   id: string;
@@ -107,7 +109,8 @@ export default function ChatPage() {
       });
 
       if (!chatRes.ok || !chatRes.body) {
-        throw new Error("Chat request failed");
+        const errBody = await chatRes.text().catch(() => "");
+        throw new Error(errBody || "Chat request failed");
       }
 
       const reader = chatRes.body.getReader();
@@ -198,9 +201,17 @@ export default function ChatPage() {
                         : "max-w-[80%] rounded-[2rem] bg-slate-700/95 px-5 py-4 text-slate-100 shadow-lg shadow-slate-950/20"
                     }
                   >
-                    <p className="whitespace-pre-wrap break-words text-sm leading-7">
-                      {message.text || (message.role === "assistant" ? "Thinking..." : "")}
-                    </p>
+                    {message.role === "assistant" ? (
+                      <div className="break-words text-sm leading-7 [&_p]:mb-2 [&_ul]:mb-2 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:mb-2 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:mb-1 [&_code]:rounded [&_code]:bg-slate-800 [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:text-sky-300 [&_pre]:mb-3 [&_pre]:overflow-x-auto [&_pre]:rounded-xl [&_pre]:bg-slate-800 [&_pre]:p-4 [&_pre]:text-sm [&_pre_code]:bg-transparent [&_pre_code]:p-0 [&_pre_code]:text-slate-100 [&_h1]:mb-3 [&_h1]:text-xl [&_h1]:font-semibold [&_h2]:mb-2 [&_h2]:text-lg [&_h2]:font-semibold [&_h3]:mb-2 [&_h3]:text-base [&_h3]:font-medium [&_strong]:font-semibold [&_a]:text-sky-400 [&_a]:underline [&_blockquote]:mb-3 [&_blockquote]:border-l-2 [&_blockquote]:border-slate-600 [&_blockquote]:pl-4 [&_blockquote]:text-slate-400 [&_hr]:my-4 [&_hr]:border-slate-700 [&_table]:mb-3 [&_table]:w-full [&_table]:border-collapse [&_th]:border [&_th]:border-slate-700 [&_th]:px-3 [&_th]:py-2 [&_th]:text-left [&_td]:border [&_td]:border-slate-700 [&_td]:px-3 [&_td]:py-2">
+                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                          {message.text || "Thinking..."}
+                        </ReactMarkdown>
+                      </div>
+                    ) : (
+                      <p className="whitespace-pre-wrap break-words text-sm leading-7">
+                        {message.text}
+                      </p>
+                    )}
                   </div>
                 </div>
               ))

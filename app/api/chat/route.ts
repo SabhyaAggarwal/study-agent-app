@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
-import { createClient, getAnthropicAuthToken } from "@/lib/supabase";
+import { createClient, getAIAuthToken } from "@/lib/supabase";
 
-const ANTHROPIC_API = "https://api.anthropic.com/v1/messages";
+const NVIDIA_API = "https://integrate.api.nvidia.com/v1/chat/completions";
+const MODEL = "nvidia/nvidia-nemotron-nano-9b-v2";
 
 function buildSystemPrompt(
   subject: string | null,
@@ -53,11 +54,11 @@ function buildSystemPrompt(
 }
 
 export async function POST(request: Request) {
-  const authToken = getAnthropicAuthToken();
+  const authToken = getAIAuthToken();
 
   if (!authToken) {
     return NextResponse.json(
-      { error: "Missing ANTHROPIC_API_KEY or ANTHROPIC_AUTH_TOKEN environment variable" },
+      { error: "Missing NVIDIA_API_KEY environment variable" },
       { status: 500 }
     );
   }
@@ -114,79 +115,96 @@ export async function POST(request: Request) {
   const systemPrompt = buildSystemPrompt(subject, concept, row);
   const userPrompt = `Student asks: ${body.userMessage}`;
 
-  const anthropicResponse = await fetch(ANTHROPIC_API, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-api-key": authToken,
-      "anthropic-version": "2023-06-01",
-    },
-    body: JSON.stringify({
-      model: "claude-sonnet-4-20250514",
-      max_tokens: 4096,
-      system: systemPrompt,
-      messages: [{ role: "user", content: userPrompt }],
-      stream: true,
-    }),
-  });
+  try {
+    const nvidiaResponse = await fetch(NVIDIA_API, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${authToken}`,
+      },
+      body: JSON.stringify({
+        model: MODEL,
+        max_tokens: 4096,
+        temperature: 0.7,
+        stream: true,
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userPrompt },
+        ],
+      }),
+    });
 
-  if (!anthropicResponse.ok) {
-    const err = await anthropicResponse.text();
-    console.error("Anthropic API error:", err);
-    return NextResponse.json({ error: "Failed to get response from AI" }, { status: 500 });
-  }
+    if (!nvidiaResponse.ok) {
+      const err = await nvidiaResponse.text();
+      console.error("NVIDIA API error:", err);
+      return NextResponse.json({ error: err || "Failed to get response from AI" }, { status: 500 });
+    }
 
-  const encoder = new TextEncoder();
-  const decoder = new TextDecoder();
+    const reader = nvidiaResponse.body?.getReader();
+    if (!reader) {
+      console.error("NVIDIA response body is null");
+      return NextResponse.json({ error: "Empty response from AI" }, { status: 500 });
+    }
 
-  const stream = new ReadableStream({
-    async start(controller) {
-      const reader = anthropicResponse.body?.getReader();
-      if (!reader) {
-        controller.close();
-        return;
-      }
+    const decoder = new TextDecoder();
+    const encoder = new TextEncoder();
 
+    async function* extractText(): AsyncGenerator<Uint8Array> {
       let buffer = "";
 
-      try {
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
+      while (true) {
+        const { done, value } = await reader!.read();
+        if (done) break;
 
-          buffer += decoder.decode(value, { stream: true });
-          const lines = buffer.split("\n");
-          buffer = lines.pop() ?? "";
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() ?? "";
 
-          for (const line of lines) {
-            if (line.startsWith("data: ")) {
-              try {
-                const parsed = JSON.parse(line.slice(6));
-                if (
-                  parsed.type === "content_block_delta" &&
-                  parsed.delta?.type === "text_delta"
-                ) {
-                  controller.enqueue(encoder.encode(parsed.delta.text));
-                }
-              } catch {
-                // skip malformed JSON
+        for (const line of lines) {
+          if (line.startsWith("data: ")) {
+            const payload = line.slice(6).trim();
+            if (payload === "[DONE]") continue;
+            try {
+              const parsed = JSON.parse(payload);
+              const content = parsed.choices?.[0]?.delta?.content;
+              if (content) {
+                yield encoder.encode(content);
               }
+            } catch {
+              // skip malformed JSON
             }
           }
         }
-      } catch (error) {
-        console.error("Stream error:", error);
-      } finally {
-        reader.releaseLock();
-        controller.close();
       }
-    },
-  });
+    }
 
-  return new Response(stream, {
-    headers: {
-      "Content-Type": "text/plain; charset=utf-8",
-      "Cache-Control": "no-cache",
-    },
-  });
+    const generator = extractText();
+    const stream = new ReadableStream({
+      async pull(controller) {
+        try {
+          const { value, done } = await generator.next();
+          if (done) {
+            controller.close();
+          } else {
+            controller.enqueue(value);
+          }
+        } catch (error) {
+          controller.error(error);
+        }
+      },
+    });
+
+    return new Response(stream, {
+      headers: {
+        "Content-Type": "text/plain; charset=utf-8",
+        "Cache-Control": "no-cache",
+      },
+    });
+  } catch (error) {
+    console.error("Chat route error:", error);
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Unknown error" },
+      { status: 500 }
+    );
+  }
 }
