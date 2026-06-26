@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import { getAIAuthToken } from "@/lib/supabase";
 
 const NVIDIA_API = "https://integrate.api.nvidia.com/v1/chat/completions";
-const MODEL = "moonshotai/kimi-k2.6";
+const MODEL = "meta/llama-3.2-3b-instruct";
 
 export async function POST(request: NextRequest) {
   const authToken = getAIAuthToken();
@@ -51,7 +51,7 @@ Message: ${userMessage}`;
       },
       body: JSON.stringify({
         model: MODEL,
-        max_tokens: 256,
+        max_tokens: 100,
         temperature: 0.01,
         messages: [
           { role: "system", content: "You extract academic subjects and concepts from student questions. Always respond with raw JSON only." },
@@ -70,7 +70,8 @@ Message: ${userMessage}`;
     }
 
     const data = await response.json();
-    const raw = data.choices?.[0]?.message?.content ?? "";
+    const msg = data.choices?.[0]?.message ?? {};
+    const raw = msg.content ?? msg.reasoning ?? msg.reasoning_content ?? "";
 
     console.log("=== NVIDIA FULL RESPONSE ===");
     console.log(JSON.stringify(data, null, 2));

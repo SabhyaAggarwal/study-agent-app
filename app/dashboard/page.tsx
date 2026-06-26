@@ -1,3 +1,4 @@
+import { auth } from "@clerk/nextjs/server";
 import { ConceptCard } from "@/components/concept-card";
 import { NavBar } from "@/components/nav-bar";
 import {
@@ -6,6 +7,7 @@ import {
   getUniqueSubjectCount,
 } from "@/lib/concept-utils";
 import { createClient } from "@/lib/supabase";
+import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
@@ -19,6 +21,9 @@ function StatsCard({ label, value }: { label: string; value: string | number }) 
 }
 
 export default async function DashboardPage() {
+  const { userId } = await auth();
+  if (!userId) redirect("/");
+
   let concepts: Concept[] = [];
   let error: { message: string } | null = null;
 
@@ -27,6 +32,7 @@ export default async function DashboardPage() {
     const result = await supabase
       .from("concepts")
       .select("*")
+      .eq("clerk_user_id", userId)
       .order("last_updated", { ascending: false });
 
     concepts = (result.data ?? []) as Concept[];

@@ -1,3 +1,4 @@
+import { auth } from "@clerk/nextjs/server";
 import { NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase";
 
@@ -18,6 +19,14 @@ function toStringArray(value: unknown): string[] | null {
 }
 
 export async function POST(request: NextRequest) {
+  const { userId } = await auth();
+  if (!userId) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+
   try {
     const {
       subject,
@@ -41,6 +50,7 @@ export async function POST(request: NextRequest) {
     const supabase = createClient();
     const { data, error } = await supabase.from("concepts").upsert(
       {
+        clerk_user_id: userId,
         subject,
         concept,
         mastery_level: masteryLevel ?? null,
@@ -52,7 +62,7 @@ export async function POST(request: NextRequest) {
         notes: notes ?? null,
         last_updated: new Date().toISOString(),
       },
-      { onConflict: "subject,concept" }
+      { onConflict: "clerk_user_id,subject,concept" }
     );
 
     if (error) {

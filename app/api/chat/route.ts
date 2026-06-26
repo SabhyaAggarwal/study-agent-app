@@ -1,8 +1,30 @@
+import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { createClient, getAIAuthToken } from "@/lib/supabase";
 
 const NVIDIA_API = "https://integrate.api.nvidia.com/v1/chat/completions";
 const MODEL = "nvidia/nvidia-nemotron-nano-9b-v2";
+
+const MASTERY_RUBRIC = `
+Mastery level rubric (assess after each response):
+- In Progress: No prior knowledge demonstrated.
+- Introduced: Can define the concept in their own words or recognize basic facts.
+- Developing: Can explain how/why it works, answer "what if" questions, or solve guided problems.
+- Proficient: Can apply the concept independently, handle edge cases, or connect it to other ideas.
+- Strong: Can teach the concept to others, analyze it critically, or combine it with advanced material.
+
+Only advance the student ONE level per response at most. Be honest — do not inflate.
+`;
+
+const ASSESSMENT_INSTRUCTIONS = `
+At the end of every response, include exactly these four lines:
+
+Mastery level: [one of: In Progress | Introduced | Developing | Proficient | Strong]
+Weak areas: [comma-separated list of specific weaknesses shown in the conversation]
+Strong areas: [comma-separated list of specific strengths shown in the conversation]
+Next steps: [comma-separated list of specific topics or exercises to try next]
+
+Base your assessment on the FULL conversation history, not just the latest question.`;
 
 function buildSystemPrompt(
   subject: string | null,
@@ -50,10 +72,19 @@ function buildSystemPrompt(
 
   const contextBlock = contextLines.length > 0 ? `${contextLines.join("\n")}\n\n` : "";
 
-  return `You are a helpful learning coach. ${modeDescription}\n\n${contextBlock}When answering, keep the explanation aligned with the student's current level and knowledge. Use clear structure, examples, and analogies when appropriate. Only produce the direct answer content; do not include system-level commentary.`;
+  return `You are a helpful learning coach. ${modeDescription}
+
+${contextBlock}When answering, keep the explanation aligned with the student's current level and knowledge. Use clear structure, examples, and analogies when appropriate.
+${MASTERY_RUBRIC}
+${ASSESSMENT_INSTRUCTIONS}`;
 }
 
 export async function POST(request: Request) {
+  const { userId } = await auth();
+  if (!userId) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const authToken = getAIAuthToken();
 
   if (!authToken) {
@@ -76,6 +107,9 @@ export async function POST(request: Request) {
     );
   }
 
+  const history: { role: string; content: string }[] =
+    Array.isArray(body.messages) ? body.messages : [];
+
   const subject = typeof body.subject === "string" && body.subject.trim() !== "" ? body.subject.trim() : null;
   const concept = typeof body.concept === "string" && body.concept.trim() !== "" ? body.concept.trim() : null;
 
@@ -87,6 +121,7 @@ export async function POST(request: Request) {
       const { data, error } = await supabase
         .from("concepts")
         .select("mastery_level, weak_areas, strong_areas")
+        .eq("clerk_user_id", userId)
         .eq("subject", subject)
         .eq("concept", concept)
         .limit(1)
@@ -113,7 +148,18 @@ export async function POST(request: Request) {
   }
 
   const systemPrompt = buildSystemPrompt(subject, concept, row);
-  const userPrompt = `Student asks: ${body.userMessage}`;
+
+  const apiMessages: { role: string; content: string }[] = [
+    { role: "system", content: systemPrompt },
+  ];
+
+  for (const msg of history) {
+    if (msg.role === "user" || msg.role === "assistant") {
+      apiMessages.push({ role: msg.role, content: msg.content });
+    }
+  }
+
+  apiMessages.push({ role: "user", content: `Student asks: ${body.userMessage}` });
 
   try {
     const nvidiaResponse = await fetch(NVIDIA_API, {
@@ -127,10 +173,7 @@ export async function POST(request: Request) {
         max_tokens: 4096,
         temperature: 0.7,
         stream: true,
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt },
-        ],
+        messages: apiMessages,
       }),
     });
 
