@@ -1,0 +1,405 @@
+2026-06-26T10:04:23.402Z	Initializing build environment...
+2026-06-26T10:04:25.259Z	Success: Finished initializing build environment
+2026-06-26T10:04:25.769Z	Cloning repository...
+2026-06-26T10:04:27.334Z	Restoring from dependencies cache
+2026-06-26T10:04:27.337Z	Restoring from build output cache
+2026-06-26T10:04:27.346Z	Detected the following tools from environment: npm@10.9.2, nodejs@22.16.0
+2026-06-26T10:04:27.498Z	Installing project dependencies: npm clean-install --progress=false
+2026-06-26T10:04:42.438Z	
+2026-06-26T10:04:42.438Z	added 497 packages, and audited 498 packages in 14s
+2026-06-26T10:04:42.438Z	
+2026-06-26T10:04:42.438Z	235 packages are looking for funding
+2026-06-26T10:04:42.438Z	  run `npm fund` for details
+2026-06-26T10:04:42.500Z	
+2026-06-26T10:04:42.501Z	3 moderate severity vulnerabilities
+2026-06-26T10:04:42.501Z	
+2026-06-26T10:04:42.501Z	Some issues need review, and may require choosing
+2026-06-26T10:04:42.501Z	a different dependency.
+2026-06-26T10:04:42.501Z	
+2026-06-26T10:04:42.501Z	Run `npm audit` for details.
+2026-06-26T10:04:42.741Z	Executing user build command: npm run build
+2026-06-26T10:04:43.183Z	
+2026-06-26T10:04:43.185Z	> study-agent-app@0.1.0 build
+2026-06-26T10:04:43.185Z	> next build
+2026-06-26T10:04:43.186Z	
+2026-06-26T10:04:43.659Z	⚠ No build cache found. Please configure build caching for faster rebuilds. Read more: https://nextjs.org/docs/messages/no-cache
+2026-06-26T10:04:43.664Z	Attention: Next.js now collects completely anonymous telemetry regarding usage.
+2026-06-26T10:04:43.664Z	This information is used to shape Next.js' roadmap and prioritize features.
+2026-06-26T10:04:43.664Z	You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
+2026-06-26T10:04:43.665Z	https://nextjs.org/telemetry
+2026-06-26T10:04:43.668Z	
+2026-06-26T10:04:43.686Z	▲ Next.js 16.2.9 (Turbopack)
+2026-06-26T10:04:43.686Z	- Experiments (use with caution):
+2026-06-26T10:04:43.687Z	  · serverActions
+2026-06-26T10:04:43.687Z	
+2026-06-26T10:04:43.782Z	  Creating an optimized production build ...
+2026-06-26T10:04:55.535Z	✓ Compiled successfully in 11.5s
+2026-06-26T10:04:55.550Z	  Running TypeScript ...
+2026-06-26T10:04:59.993Z	  Finished TypeScript in 4.4s ...
+2026-06-26T10:04:59.997Z	  Collecting page data using 1 worker ...
+2026-06-26T10:05:00.497Z	  Generating static pages using 1 worker (0/9) ...
+2026-06-26T10:05:00.544Z	  Generating static pages using 1 worker (2/9) 
+2026-06-26T10:05:00.545Z	  Generating static pages using 1 worker (4/9) 
+2026-06-26T10:05:00.695Z	  Generating static pages using 1 worker (6/9) 
+2026-06-26T10:05:00.748Z	✓ Generating static pages using 1 worker (9/9) in 251ms
+2026-06-26T10:05:00.755Z	  Finalizing page optimization ...
+2026-06-26T10:05:00.766Z	
+2026-06-26T10:05:00.768Z	Route (app)
+2026-06-26T10:05:00.768Z	┌ ○ /
+2026-06-26T10:05:00.768Z	├ ○ /_not-found
+2026-06-26T10:05:00.769Z	├ ƒ /api/chat
+2026-06-26T10:05:00.769Z	├ ƒ /api/chat-history
+2026-06-26T10:05:00.769Z	├ ƒ /api/chat-history/[id]
+2026-06-26T10:05:00.769Z	├ ƒ /api/chat-history/cleanup
+2026-06-26T10:05:00.769Z	├ ƒ /api/detect-concept
+2026-06-26T10:05:00.769Z	├ ƒ /api/save-concept
+2026-06-26T10:05:00.769Z	├ ƒ /dashboard
+2026-06-26T10:05:00.769Z	├ ƒ /sign-in/[[...sign-in]]
+2026-06-26T10:05:00.769Z	└ ƒ /sign-up/[[...sign-up]]
+2026-06-26T10:05:00.769Z	
+2026-06-26T10:05:00.769Z	
+2026-06-26T10:05:00.769Z	ƒ Proxy (Middleware)
+2026-06-26T10:05:00.769Z	
+2026-06-26T10:05:00.769Z	○  (Static)   prerendered as static content
+2026-06-26T10:05:00.769Z	ƒ  (Dynamic)  server-rendered on demand
+2026-06-26T10:05:00.769Z	
+2026-06-26T10:05:00.857Z	Success: Build command completed
+2026-06-26T10:05:00.957Z	Executing user deploy command: npx wrangler deploy
+2026-06-26T10:05:02.050Z	npm warn exec The following package was not found and will be installed: wrangler@4.105.0
+2026-06-26T10:05:09.956Z	
+2026-06-26T10:05:09.956Z	 ⛅️ wrangler 4.105.0
+2026-06-26T10:05:09.956Z	────────────────────
+2026-06-26T10:05:10.133Z	
+2026-06-26T10:05:10.133Z	Detected Project Settings:
+2026-06-26T10:05:10.133Z	 - Worker Name: study-agent-app
+2026-06-26T10:05:10.133Z	 - Framework: Next.js
+2026-06-26T10:05:10.133Z	 - Build Command: npm run build
+2026-06-26T10:05:10.134Z	 - Output Directory: .next
+2026-06-26T10:05:10.134Z	
+2026-06-26T10:05:10.134Z	? Do you want to modify these settings?
+2026-06-26T10:05:10.134Z	🤖 Using fallback value in non-interactive context: no
+2026-06-26T10:05:10.137Z	
+2026-06-26T10:05:10.142Z	📦 Install packages:
+2026-06-26T10:05:10.142Z	 - wrangler (devDependency)
+2026-06-26T10:05:10.142Z	
+2026-06-26T10:05:10.143Z	📝 Update package.json scripts:
+2026-06-26T10:05:10.143Z	 - "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy"
+2026-06-26T10:05:10.143Z	 - "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview"
+2026-06-26T10:05:10.143Z	
+2026-06-26T10:05:10.143Z	📄 Create wrangler.jsonc:
+2026-06-26T10:05:10.144Z	  {
+2026-06-26T10:05:10.145Z	    "$schema": "node_modules/wrangler/config-schema.json",
+2026-06-26T10:05:10.145Z	    "name": "study-agent-app",
+2026-06-26T10:05:10.145Z	    "compatibility_date": "2026-06-26",
+2026-06-26T10:05:10.145Z	    "observability": {
+2026-06-26T10:05:10.145Z	      "enabled": true
+2026-06-26T10:05:10.145Z	    },
+2026-06-26T10:05:10.147Z	    "compatibility_flags": [
+2026-06-26T10:05:10.149Z	      "nodejs_compat"
+2026-06-26T10:05:10.149Z	    ]
+2026-06-26T10:05:10.149Z	  }
+2026-06-26T10:05:10.149Z	
+2026-06-26T10:05:10.149Z	🛠️  Configuring project for Next.js with OpenNext by running `@opennextjs/cloudflare migrate`
+2026-06-26T10:05:10.149Z	
+2026-06-26T10:05:10.149Z	? Proceed with setup?
+2026-06-26T10:05:10.149Z	🤖 Using fallback value in non-interactive context: yes
+2026-06-26T10:05:15.900Z	npm warn exec The following package was not found and will be installed: @opennextjs/cloudflare@1.20.0
+2026-06-26T10:05:35.612Z	npm warn deprecated node-domexception@1.0.0: Use your platform's native DOMException instead
+2026-06-26T10:05:36.401Z	npm warn deprecated glob@9.3.5: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
+2026-06-26T10:05:46.420Z	
+2026-06-26T10:05:46.420Z	┌───────────────────────────────┐
+2026-06-26T10:05:46.420Z	│ OpenNext — Cloudflare migrate │
+2026-06-26T10:05:46.420Z	└───────────────────────────────┘
+2026-06-26T10:05:46.420Z	
+2026-06-26T10:05:46.420Z	🚀 Setting up the OpenNext Cloudflare adapter...
+2026-06-26T10:05:46.420Z	
+2026-06-26T10:05:46.429Z	⚙️  Installing dependencies...
+2026-06-26T10:05:46.430Z	
+2026-06-26T10:05:46.606Z	npm warn using --force Recommended protections disabled.
+2026-06-26T10:05:53.403Z	npm warn deprecated node-domexception@1.0.0: Use your platform's native DOMException instead
+2026-06-26T10:05:53.960Z	npm warn deprecated glob@9.3.5: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
+2026-06-26T10:05:56.405Z	
+2026-06-26T10:05:56.405Z	added 252 packages, and audited 776 packages in 10s
+2026-06-26T10:05:56.406Z	
+2026-06-26T10:05:56.406Z	281 packages are looking for funding
+2026-06-26T10:05:56.407Z	  run `npm fund` for details
+2026-06-26T10:05:56.503Z	
+2026-06-26T10:05:56.503Z	5 moderate severity vulnerabilities
+2026-06-26T10:05:56.503Z	
+2026-06-26T10:05:56.503Z	To address all issues possible (including breaking changes), run:
+2026-06-26T10:05:56.503Z	  npm audit fix --force
+2026-06-26T10:05:56.503Z	
+2026-06-26T10:05:56.503Z	Some issues need review, and may require choosing
+2026-06-26T10:05:56.503Z	a different dependency.
+2026-06-26T10:05:56.503Z	
+2026-06-26T10:05:56.503Z	Run `npm audit` for details.
+2026-06-26T10:05:56.673Z	npm warn using --force Recommended protections disabled.
+2026-06-26T10:05:59.260Z	
+2026-06-26T10:05:59.261Z	added 1 package, and audited 777 packages in 3s
+2026-06-26T10:05:59.262Z	
+2026-06-26T10:05:59.262Z	281 packages are looking for funding
+2026-06-26T10:05:59.262Z	  run `npm fund` for details
+2026-06-26T10:05:59.334Z	
+2026-06-26T10:05:59.334Z	5 moderate severity vulnerabilities
+2026-06-26T10:05:59.334Z	
+2026-06-26T10:05:59.334Z	To address all issues possible (including breaking changes), run:
+2026-06-26T10:05:59.334Z	  npm audit fix --force
+2026-06-26T10:05:59.334Z	
+2026-06-26T10:05:59.334Z	Some issues need review, and may require choosing
+2026-06-26T10:05:59.334Z	a different dependency.
+2026-06-26T10:05:59.334Z	
+2026-06-26T10:05:59.334Z	Run `npm audit` for details.
+2026-06-26T10:05:59.356Z	⚙️  Creating wrangler.jsonc...
+2026-06-26T10:05:59.357Z	
+2026-06-26T10:06:01.208Z	WARN Failed to set up cache for your project.
+2026-06-26T10:06:01.208Z	After the migration completes, please manually setup cache in  wrangler.jsonc and open-next.config.ts files (for more details see: https://opennext.js.org/cloudflare/caching).
+2026-06-26T10:06:01.208Z	
+2026-06-26T10:06:01.209Z	⚙️  Creating open-next.config.ts...
+2026-06-26T10:06:01.209Z	
+2026-06-26T10:06:01.224Z	⚙️  Creating .dev.vars file...
+2026-06-26T10:06:01.224Z	
+2026-06-26T10:06:01.224Z	⚙️  Creating public/_headers file...
+2026-06-26T10:06:01.224Z	
+2026-06-26T10:06:01.224Z	⚙️  Updating package.json scripts...
+2026-06-26T10:06:01.225Z	
+2026-06-26T10:06:01.225Z	⚙️  Updating .gitignore file...
+2026-06-26T10:06:01.225Z	
+2026-06-26T10:06:01.226Z	⚙️  Updating Next.js config...
+2026-06-26T10:06:01.226Z	
+2026-06-26T10:06:01.226Z	⚙️  Checking for edge runtime usage...
+2026-06-26T10:06:01.226Z	
+2026-06-26T10:06:01.236Z	🎉 OpenNext Cloudflare adapter complete!
+2026-06-26T10:06:01.236Z	
+2026-06-26T10:06:01.236Z	Next steps:
+2026-06-26T10:06:01.236Z	- Run: "npm run preview" to build and preview your Cloudflare application locally
+2026-06-26T10:06:01.236Z	- Run: "npm run deploy" to deploy your application to Cloudflare Workers
+2026-06-26T10:06:01.236Z	- ⚠️  Setup cache, see https://opennext.js.org/cloudflare/caching for more details
+2026-06-26T10:06:01.236Z	
+2026-06-26T10:06:01.368Z	├ Adding Wrangler files to the .gitignore file
+2026-06-26T10:06:01.368Z	│ updated .gitignore file
+2026-06-26T10:06:01.368Z	│
+2026-06-26T10:06:01.368Z	[build] Running: npx opennextjs-cloudflare build
+2026-06-26T10:06:03.647Z	[build] 
+2026-06-26T10:06:03.648Z	[build] ┌─────────────────────────────┐
+2026-06-26T10:06:03.648Z	[build] │ OpenNext — Cloudflare build │
+2026-06-26T10:06:03.648Z	[build] └─────────────────────────────┘
+2026-06-26T10:06:03.648Z	[build] 
+2026-06-26T10:06:03.648Z	[build] 
+2026-06-26T10:06:03.752Z	[build] App directory: /opt/buildhome/repo
+2026-06-26T10:06:03.752Z	[build] 
+2026-06-26T10:06:03.755Z	[build] Next.js version : 16.2.9
+2026-06-26T10:06:03.755Z	[build] 
+2026-06-26T10:06:03.758Z	[build] @opennextjs/cloudflare version: 1.20.0
+2026-06-26T10:06:03.758Z	[build] 
+2026-06-26T10:06:03.763Z	[build] @opennextjs/aws version: 4.0.2
+2026-06-26T10:06:03.763Z	[build] workerd compatibility_date: 2026-06-26
+2026-06-26T10:06:03.763Z	[build] 
+2026-06-26T10:06:03.763Z	[build] ┌─────────────────────────────────┐
+2026-06-26T10:06:03.763Z	[build] │ OpenNext — Building Next.js app │
+2026-06-26T10:06:03.763Z	[build] └─────────────────────────────────┘
+2026-06-26T10:06:03.763Z	[build] 
+2026-06-26T10:06:03.763Z	[build] 
+2026-06-26T10:06:03.899Z	[build] 
+2026-06-26T10:06:03.900Z	[build] > study-agent-app@0.1.0 build
+2026-06-26T10:06:03.901Z	[build] > next build
+2026-06-26T10:06:03.903Z	[build] 
+2026-06-26T10:06:03.903Z	[build] 
+2026-06-26T10:06:04.337Z	[build] ▲ Next.js 16.2.9 (Turbopack)
+2026-06-26T10:06:04.338Z	[build] 
+2026-06-26T10:06:04.340Z	[build] - Experiments (use with caution):
+2026-06-26T10:06:04.341Z	[build]   · serverActions
+2026-06-26T10:06:04.341Z	[build] 
+2026-06-26T10:06:04.341Z	[build] 
+2026-06-26T10:06:05.445Z	[build] Using secrets defined in .dev.vars
+2026-06-26T10:06:05.445Z	[build] 
+2026-06-26T10:06:05.455Z	[build]   Creating an optimized production build ...
+2026-06-26T10:06:05.455Z	[build] 
+2026-06-26T10:06:16.073Z	[build] ✓ Compiled successfully in 10.3s
+2026-06-26T10:06:16.073Z	[build] 
+2026-06-26T10:06:16.085Z	[build]   Running TypeScript ...
+2026-06-26T10:06:16.085Z	[build] 
+2026-06-26T10:06:22.363Z	[build]   Finished TypeScript in 6.3s ...
+2026-06-26T10:06:22.363Z	[build] 
+2026-06-26T10:06:22.369Z	[build]   Collecting page data using 1 worker ...
+2026-06-26T10:06:22.369Z	[build] 
+2026-06-26T10:06:22.859Z	[build]   Generating static pages using 1 worker (0/9) ...
+2026-06-26T10:06:22.860Z	[build] 
+2026-06-26T10:06:22.909Z	[build]   Generating static pages using 1 worker (2/9) 
+2026-06-26T10:06:22.909Z	[build] 
+2026-06-26T10:06:22.909Z	[build]   Generating static pages using 1 worker (4/9) 
+2026-06-26T10:06:22.909Z	[build] 
+2026-06-26T10:06:23.051Z	[build]   Generating static pages using 1 worker (6/9) 
+2026-06-26T10:06:23.051Z	[build] 
+2026-06-26T10:06:23.109Z	[build] ✓ Generating static pages using 1 worker (9/9) in 249ms
+2026-06-26T10:06:23.110Z	[build] 
+2026-06-26T10:06:23.125Z	[build]   Finalizing page optimization ...
+2026-06-26T10:06:23.126Z	[build] 
+2026-06-26T10:06:23.771Z	[build] 
+2026-06-26T10:06:23.771Z	[build] 
+2026-06-26T10:06:23.774Z	[build] Route (app)
+2026-06-26T10:06:23.776Z	[build] ┌ ○ /
+2026-06-26T10:06:23.776Z	[build] ├ ○ /_not-found
+2026-06-26T10:06:23.776Z	[build] ├ ƒ /api/chat
+2026-06-26T10:06:23.776Z	[build] ├ ƒ /api/chat-history
+2026-06-26T10:06:23.776Z	[build] ├ ƒ /api/chat-history/[id]
+2026-06-26T10:06:23.776Z	[build] ├ ƒ /api/chat-history/cleanup
+2026-06-26T10:06:23.776Z	[build] ├ ƒ /api/detect-concept
+2026-06-26T10:06:23.776Z	[build] ├ ƒ /api/save-concept
+2026-06-26T10:06:23.776Z	[build] ├ ƒ /dashboard
+2026-06-26T10:06:23.777Z	[build] ├ ƒ /sign-in/[[...sign-in]]
+2026-06-26T10:06:23.777Z	[build] └ ƒ /sign-up/[[...sign-up]]
+2026-06-26T10:06:23.777Z	[build] 
+2026-06-26T10:06:23.777Z	[build] 
+2026-06-26T10:06:23.777Z	[build] ƒ Proxy (Middleware)
+2026-06-26T10:06:23.777Z	[build] 
+2026-06-26T10:06:23.777Z	[build] 
+2026-06-26T10:06:23.777Z	[build] ○  (Static)   prerendered as static content
+2026-06-26T10:06:23.777Z	[build] ƒ  (Dynamic)  server-rendered on demand
+2026-06-26T10:06:23.777Z	[build] 
+2026-06-26T10:06:23.777Z	[build] 
+2026-06-26T10:06:23.871Z	[build] ERROR Node.js middleware is not currently supported. Consider switching to Edge Middleware.
+2026-06-26T10:06:23.871Z	[build] 
+2026-06-26T10:06:24.003Z	✘ [ERROR] Error: Command failed with exit code 1: npx opennextjs-cloudflare build
+2026-06-26T10:06:24.003Z	
+2026-06-26T10:06:24.004Z	  ERROR Node.js middleware is not currently supported. Consider switching to Edge Middleware.
+2026-06-26T10:06:24.004Z	  
+2026-06-26T10:06:24.004Z	  ┌─────────────────────────────┐
+2026-06-26T10:06:24.004Z	  │ OpenNext — Cloudflare build │
+2026-06-26T10:06:24.004Z	  └─────────────────────────────┘
+2026-06-26T10:06:24.004Z	  
+2026-06-26T10:06:24.004Z	  App directory: /opt/buildhome/repo
+2026-06-26T10:06:24.004Z	  Next.js version : 16.2.9
+2026-06-26T10:06:24.004Z	  @opennextjs/cloudflare version: 1.20.0
+2026-06-26T10:06:24.004Z	  @opennextjs/aws version: 4.0.2
+2026-06-26T10:06:24.004Z	  workerd compatibility_date: 2026-06-26
+2026-06-26T10:06:24.004Z	  
+2026-06-26T10:06:24.004Z	  ┌─────────────────────────────────┐
+2026-06-26T10:06:24.004Z	  │ OpenNext — Building Next.js app │
+2026-06-26T10:06:24.005Z	  └─────────────────────────────────┘
+2026-06-26T10:06:24.005Z	  
+2026-06-26T10:06:24.005Z	  
+2026-06-26T10:06:24.005Z	  > study-agent-app@0.1.0 build
+2026-06-26T10:06:24.005Z	  > next build
+2026-06-26T10:06:24.005Z	  
+2026-06-26T10:06:24.005Z	  ▲ Next.js 16.2.9 (Turbopack)
+2026-06-26T10:06:24.005Z	  - Experiments (use with caution):
+2026-06-26T10:06:24.005Z	    · serverActions
+2026-06-26T10:06:24.005Z	  
+2026-06-26T10:06:24.005Z	  Using secrets defined in .dev.vars
+2026-06-26T10:06:24.005Z	    Creating an optimized production build ...
+2026-06-26T10:06:24.005Z	  ✓ Compiled successfully in 10.3s
+2026-06-26T10:06:24.006Z	    Running TypeScript ...
+2026-06-26T10:06:24.006Z	    Finished TypeScript in 6.3s ...
+2026-06-26T10:06:24.006Z	    Collecting page data using 1 worker ...
+2026-06-26T10:06:24.007Z	    Generating static pages using 1 worker (0/9) ...
+2026-06-26T10:06:24.007Z	    Generating static pages using 1 worker (2/9) 
+2026-06-26T10:06:24.007Z	    Generating static pages using 1 worker (4/9) 
+2026-06-26T10:06:24.007Z	    Generating static pages using 1 worker (6/9) 
+2026-06-26T10:06:24.007Z	  ✓ Generating static pages using 1 worker (9/9) in 249ms
+2026-06-26T10:06:24.007Z	    Finalizing page optimization ...
+2026-06-26T10:06:24.007Z	  
+2026-06-26T10:06:24.007Z	  Route (app)
+2026-06-26T10:06:24.007Z	  ┌ ○ /
+2026-06-26T10:06:24.007Z	  ├ ○ /_not-found
+2026-06-26T10:06:24.007Z	  ├ ƒ /api/chat
+2026-06-26T10:06:24.007Z	  ├ ƒ /api/chat-history
+2026-06-26T10:06:24.007Z	  ├ ƒ /api/chat-history/[id]
+2026-06-26T10:06:24.007Z	  ├ ƒ /api/chat-history/cleanup
+2026-06-26T10:06:24.007Z	  ├ ƒ /api/detect-concept
+2026-06-26T10:06:24.007Z	  ├ ƒ /api/save-concept
+2026-06-26T10:06:24.007Z	  ├ ƒ /dashboard
+2026-06-26T10:06:24.008Z	  ├ ƒ /sign-in/[[...sign-in]]
+2026-06-26T10:06:24.008Z	  └ ƒ /sign-up/[[...sign-up]]
+2026-06-26T10:06:24.008Z	  
+2026-06-26T10:06:24.008Z	  
+2026-06-26T10:06:24.008Z	  ƒ Proxy (Middleware)
+2026-06-26T10:06:24.008Z	  
+2026-06-26T10:06:24.008Z	  ○  (Static)   prerendered as static content
+2026-06-26T10:06:24.008Z	  ƒ  (Dynamic)  server-rendered on demand
+2026-06-26T10:06:24.008Z	  
+2026-06-26T10:06:24.008Z	      at makeError (/opt/buildhome/.npm/_npx/32026684e21afda6/node_modules/wrangler/wrangler-dist/cli.js:165454:19)
+2026-06-26T10:06:24.008Z	      at handlePromise (/opt/buildhome/.npm/_npx/32026684e21afda6/node_modules/wrangler/wrangler-dist/cli.js:165921:29)
+2026-06-26T10:06:24.008Z	      at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+2026-06-26T10:06:24.008Z	      at async runCommand (/opt/buildhome/.npm/_npx/32026684e21afda6/node_modules/wrangler/wrangler-dist/cli.js:174486:5)
+2026-06-26T10:06:24.008Z	      at async Object.runCommand (/opt/buildhome/.npm/_npx/32026684e21afda6/node_modules/wrangler/wrangler-dist/cli.js:288240:7)
+2026-06-26T10:06:24.008Z	      at async runAutoConfig (/opt/buildhome/.npm/_npx/32026684e21afda6/node_modules/wrangler/wrangler-dist/cli.js:237851:5)
+2026-06-26T10:06:24.008Z	      at async runAutoConfigLogic (/opt/buildhome/.npm/_npx/32026684e21afda6/node_modules/wrangler/wrangler-dist/cli.js:288193:21)
+2026-06-26T10:06:24.009Z	      at async maybeRunAutoConfig (/opt/buildhome/.npm/_npx/32026684e21afda6/node_modules/wrangler/wrangler-dist/cli.js:288300:35)
+2026-06-26T10:06:24.009Z	      at async Object.handler (/opt/buildhome/.npm/_npx/32026684e21afda6/node_modules/wrangler/wrangler-dist/cli.js:288667:34)
+2026-06-26T10:06:24.009Z	      at async /opt/buildhome/.npm/_npx/32026684e21afda6/node_modules/wrangler/wrangler-dist/cli.js:229892:26 {
+2026-06-26T10:06:24.009Z	    shortMessage: 'Command failed with exit code 1: npx opennextjs-cloudflare build',
+2026-06-26T10:06:24.009Z	    command: 'npx opennextjs-cloudflare build',
+2026-06-26T10:06:24.010Z	    escapedCommand: 'npx opennextjs-cloudflare build',
+2026-06-26T10:06:24.010Z	    exitCode: 1,
+2026-06-26T10:06:24.010Z	    signal: undefined,
+2026-06-26T10:06:24.010Z	    signalDescription: undefined,
+2026-06-26T10:06:24.010Z	    stdout: '\n' +
+2026-06-26T10:06:24.010Z	      '┌─────────────────────────────┐\n' +
+2026-06-26T10:06:24.010Z	      '│ OpenNext — Cloudflare build │\n' +
+2026-06-26T10:06:24.010Z	      '└─────────────────────────────┘\n' +
+2026-06-26T10:06:24.010Z	      '\n' +
+2026-06-26T10:06:24.011Z	      'App directory: /opt/buildhome/repo\n' +
+2026-06-26T10:06:24.011Z	      'Next.js version : 16.2.9\n' +
+2026-06-26T10:06:24.011Z	      '@opennextjs/cloudflare version: 1.20.0\n' +
+2026-06-26T10:06:24.011Z	      '@opennextjs/aws version: 4.0.2\n' +
+2026-06-26T10:06:24.011Z	      'workerd compatibility_date: 2026-06-26\n' +
+2026-06-26T10:06:24.011Z	      '\n' +
+2026-06-26T10:06:24.011Z	      '┌─────────────────────────────────┐\n' +
+2026-06-26T10:06:24.011Z	      '│ OpenNext — Building Next.js app │\n' +
+2026-06-26T10:06:24.011Z	      '└─────────────────────────────────┘\n' +
+2026-06-26T10:06:24.011Z	      '\n' +
+2026-06-26T10:06:24.011Z	      '\n' +
+2026-06-26T10:06:24.011Z	      '> study-agent-app@0.1.0 build\n' +
+2026-06-26T10:06:24.011Z	      '> next build\n' +
+2026-06-26T10:06:24.011Z	      '\n' +
+2026-06-26T10:06:24.012Z	      '▲ Next.js 16.2.9 (Turbopack)\n' +
+2026-06-26T10:06:24.012Z	      '- Experiments (use with caution):\n' +
+2026-06-26T10:06:24.012Z	      '  · serverActions\n' +
+2026-06-26T10:06:24.012Z	      '\n' +
+2026-06-26T10:06:24.012Z	      'Using secrets defined in .dev.vars\n' +
+2026-06-26T10:06:24.012Z	      '  Creating an optimized production build ...\n' +
+2026-06-26T10:06:24.013Z	      '✓ Compiled successfully in 10.3s\n' +
+2026-06-26T10:06:24.013Z	      '  Running TypeScript ...\n' +
+2026-06-26T10:06:24.013Z	      '  Finished TypeScript in 6.3s ...\n' +
+2026-06-26T10:06:24.014Z	      '  Collecting page data using 1 worker ...\n' +
+2026-06-26T10:06:24.014Z	      '  Generating static pages using 1 worker (0/9) ...\n' +
+2026-06-26T10:06:24.014Z	      '  Generating static pages using 1 worker (2/9) \r\n' +
+2026-06-26T10:06:24.014Z	      '  Generating static pages using 1 worker (4/9) \r\n' +
+2026-06-26T10:06:24.014Z	      '  Generating static pages using 1 worker (6/9) \r\n' +
+2026-06-26T10:06:24.014Z	      '✓ Generating static pages using 1 worker (9/9) in 249ms\n' +
+2026-06-26T10:06:24.014Z	      '  Finalizing page optimization ...\n' +
+2026-06-26T10:06:24.015Z	      '\n' +
+2026-06-26T10:06:24.015Z	      'Route (app)\n' +
+2026-06-26T10:06:24.015Z	      '┌ ○ /\n' +
+2026-06-26T10:06:24.015Z	      '├ ○ /_not-found\n' +
+2026-06-26T10:06:24.015Z	      '├ ƒ /api/chat\n' +
+2026-06-26T10:06:24.015Z	      '├ ƒ /api/chat-history\n' +
+2026-06-26T10:06:24.015Z	      '├ ƒ /api/chat-history/[id]\n' +
+2026-06-26T10:06:24.015Z	      '├ ƒ /api/chat-history/cleanup\n' +
+2026-06-26T10:06:24.015Z	      '├ ƒ /api/detect-concept\n' +
+2026-06-26T10:06:24.015Z	      '├ ƒ /api/save-concept\n' +
+2026-06-26T10:06:24.015Z	      '├ ƒ /dashboard\n' +
+2026-06-26T10:06:24.015Z	      '├ ƒ /sign-in/[[...sign-in]]\n' +
+2026-06-26T10:06:24.015Z	      '└ ƒ /sign-up/[[...sign-up]]\n' +
+2026-06-26T10:06:24.015Z	      '\n' +
+2026-06-26T10:06:24.015Z	      '\n' +
+2026-06-26T10:06:24.015Z	      'ƒ Proxy (Middleware)\n' +
+2026-06-26T10:06:24.016Z	      '\n' +
+2026-06-26T10:06:24.016Z	      '○  (Static)   prerendered as static content\n' +
+2026-06-26T10:06:24.016Z	      'ƒ  (Dynamic)  server-rendered on demand\n',
+2026-06-26T10:06:24.016Z	    stderr: 'ERROR Node.js middleware is not currently supported. Consider switching to Edge Middleware.',
+2026-06-26T10:06:24.016Z	    failed: true,
+2026-06-26T10:06:24.016Z	    timedOut: false,
+2026-06-26T10:06:24.016Z	    isCanceled: false,
+2026-06-26T10:06:24.016Z	    killed: false
+2026-06-26T10:06:24.016Z	  }
+2026-06-26T10:06:24.016Z	
+2026-06-26T10:06:24.016Z	
+2026-06-26T10:06:24.018Z	✘ [ERROR] Running custom build `npx opennextjs-cloudflare build` failed. There are likely more logs from your build command above.
+2026-06-26T10:06:24.019Z	
+2026-06-26T10:06:24.019Z	
+2026-06-26T10:06:24.020Z	
+2026-06-26T10:06:24.020Z	Cloudflare collects anonymous telemetry about your usage of Wrangler. Learn more at https://github.com/cloudflare/workers-sdk/tree/main/packages/wrangler/telemetry.md
+2026-06-26T10:06:24.020Z	
+2026-06-26T10:06:24.045Z	🪵  Logs were written to "/opt/buildhome/.config/.wrangler/logs/wrangler-2026-06-26_10-05-09_557.log"
+2026-06-26T10:06:24.109Z	Failed: error occurred while running deploy command
