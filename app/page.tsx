@@ -50,8 +50,13 @@ export default function ChatPage() {
   const [detectFailed, setDetectFailed] = useState(false);
   const [manualSubject, setManualSubject] = useState("");
   const [manualConcept, setManualConcept] = useState("");
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [listening, setListening] = useState(false);
+  const [editingField, setEditingField] = useState<"subject" | "concept" | null>(null);
   const listRef = useRef<HTMLDivElement | null>(null);
   const deleteTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const recognitionRef = useRef<any>(null);
 
   useEffect(() => {
     if (!isSignedIn) return;
@@ -91,6 +96,7 @@ export default function ChatPage() {
     setSubject("");
     setConcept("");
     setDetectFailed(false);
+    setSelectedImage(null);
     setManualSubject("");
     setManualConcept("");
 
@@ -133,7 +139,9 @@ export default function ChatPage() {
     if (deleteTimerRef.current) clearTimeout(deleteTimerRef.current);
 
     const trimmed = input.trim();
-    if (!trimmed || loading) return;
+    if ((!trimmed && !selectedImage) || loading) return;
+
+    const currentImage = selectedImage;
 
     let sessionId = activeSessionId;
     if (!sessionId) {
@@ -149,34 +157,43 @@ export default function ChatPage() {
     setLoading(true);
     setDetectFailed(false);
 
-    const userMsg: Message = { id: `${Date.now()}-user`, role: "user", content: trimmed };
+    const displayContent = trimmed && currentImage
+      ? `${trimmed}\n\n![Uploaded Image](${currentImage})`
+      : currentImage
+        ? `![Uploaded Image](${currentImage})`
+        : trimmed;
+
+    const userMsg: Message = { id: `${Date.now()}-user`, role: "user", content: displayContent };
     setMessages((prev) => [...prev, userMsg]);
 
     if (sessionId) {
-      saveMessage("user", trimmed);
+      saveMessage("user", displayContent);
     }
 
     setInput("");
+    setSelectedImage(null);
 
     try {
       const detectRes = await fetch("/api/detect-concept", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userMessage: trimmed }),
+        body: JSON.stringify({ userMessage: trimmed, image: currentImage }),
       });
       const detectData = await detectRes.json();
       const detectedSubject = typeof detectData.subject === "string" ? detectData.subject : "";
       const detectedConcept = typeof detectData.concept === "string" ? detectData.concept : "";
 
-      if (detectedSubject && detectedConcept) {
-        setSubject(detectedSubject);
-        setConcept(detectedConcept);
+      if (detectedSubject || detectedConcept) {
+        if (detectedSubject) setSubject(detectedSubject);
+        if (detectedConcept) setConcept(detectedConcept);
         if (sessionId) updateSessionConcept(detectedSubject, detectedConcept);
-        fetch("/api/save-concept", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ subject: detectedSubject, concept: detectedConcept }),
-        }).catch(() => {});
+        if (detectedSubject && detectedConcept) {
+          fetch("/api/save-concept", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ subject: detectedSubject, concept: detectedConcept }),
+          }).catch(() => {});
+        }
       } else {
         setDetectFailed(true);
         setSubject("");
@@ -193,6 +210,7 @@ export default function ChatPage() {
           userMessage: trimmed,
           subject: detectedSubject || null,
           concept: detectedConcept || null,
+          images: currentImage ? [currentImage] : [],
           messages: messages.map((m) => ({ role: m.role, content: m.content })),
         }),
       });
@@ -259,6 +277,10 @@ export default function ChatPage() {
     const lastUserMsg = [...messages].reverse().find((m) => m.role === "user");
     if (!lastUserMsg) return;
 
+    const imgMatch = lastUserMsg.content.match(/!\[.*?\]\(data:([^)]+)\)/);
+    const retryImage = imgMatch ? `data:${imgMatch[1]}` : null;
+    const textContent = lastUserMsg.content.replace(/!\[.*?\]\(data:[^)]+\)/g, "").trim();
+
     setDetectFailed(false);
     setLoading(true);
 
@@ -266,21 +288,23 @@ export default function ChatPage() {
       const detectRes = await fetch("/api/detect-concept", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userMessage: lastUserMsg.content }),
+        body: JSON.stringify({ userMessage: textContent || undefined, image: retryImage }),
       });
       const detectData = await detectRes.json();
       const detectedSubject = typeof detectData.subject === "string" ? detectData.subject : "";
       const detectedConcept = typeof detectData.concept === "string" ? detectData.concept : "";
 
-      if (detectedSubject && detectedConcept) {
-        setSubject(detectedSubject);
-        setConcept(detectedConcept);
+      if (detectedSubject || detectedConcept) {
+        if (detectedSubject) setSubject(detectedSubject);
+        if (detectedConcept) setConcept(detectedConcept);
         if (activeSessionId) updateSessionConcept(detectedSubject, detectedConcept);
-        fetch("/api/save-concept", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ subject: detectedSubject, concept: detectedConcept }),
-        }).catch(() => {});
+        if (detectedSubject && detectedConcept) {
+          fetch("/api/save-concept", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ subject: detectedSubject, concept: detectedConcept }),
+          }).catch(() => {});
+        }
       } else {
         setDetectFailed(true);
       }
@@ -307,6 +331,46 @@ export default function ChatPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ subject: subj, concept: conc }),
     }).catch(() => {});
+  }
+
+  function toggleListening() {
+    if (listening) {
+      recognitionRef.current?.stop();
+      setListening(false);
+      return;
+    }
+
+    const SpeechRecognitionAPI =
+      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognitionAPI) {
+      setError("Speech recognition is not supported in your browser.");
+      return;
+    }
+
+    const recognition = new SpeechRecognitionAPI();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = "en-US";
+
+    recognition.onresult = (event: any) => {
+      let transcript = "";
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        transcript += event.results[i][0].transcript;
+      }
+      setInput((prev) => prev + transcript);
+    };
+
+    recognition.onerror = () => {
+      setListening(false);
+    };
+
+    recognition.onend = () => {
+      setListening(false);
+    };
+
+    recognition.start();
+    recognitionRef.current = recognition;
+    setListening(true);
   }
 
   if (!isSignedIn) {
@@ -381,10 +445,62 @@ export default function ChatPage() {
                   <div className="flex items-center gap-3">
                     <p className="text-xs uppercase tracking-[0.35em] text-slate-500">Study agent</p>
                     {(subject || concept) && (
-                      <span className="text-xs text-slate-400">
-                        {subject && <span className="text-sky-300">{subject}</span>}
+                      <span className="flex items-center gap-1.5 text-xs text-slate-400">
+                        {subject ? (
+                          editingField === "subject" ? (
+                            <input
+                              value={subject}
+                              onChange={(e) => setSubject(e.target.value)}
+                              onBlur={() => {
+                                setEditingField(null);
+                                if (activeSessionId) updateSessionConcept(subject, concept);
+                              }}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") {
+                                  (e.target as HTMLInputElement).blur();
+                                }
+                              }}
+                              autoFocus
+                              className="w-24 rounded-md border border-sky-500/50 bg-slate-800 px-1.5 py-0.5 text-xs text-sky-300 outline-none"
+                            />
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => setEditingField("subject")}
+                              className="text-sky-300 hover:text-sky-200 hover:underline cursor-pointer"
+                            >
+                              {subject}
+                            </button>
+                          )
+                        ) : null}
                         {subject && concept && <span> · </span>}
-                        {concept && <span className="text-emerald-300">{concept}</span>}
+                        {concept ? (
+                          editingField === "concept" ? (
+                            <input
+                              value={concept}
+                              onChange={(e) => setConcept(e.target.value)}
+                              onBlur={() => {
+                                setEditingField(null);
+                                if (activeSessionId) updateSessionConcept(subject, concept);
+                              }}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") {
+                                  (e.target as HTMLInputElement).blur();
+                                }
+                              }}
+                              autoFocus
+                              className="w-24 rounded-md border border-emerald-500/50 bg-slate-800 px-1.5 py-0.5 text-xs text-emerald-300 outline-none"
+                            />
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => setEditingField("concept")}
+                              className="text-emerald-300 hover:text-emerald-200 hover:underline cursor-pointer"
+                            >
+                              {concept}
+                            </button>
+                          )
+                        ) : null}
                       </span>
                     )}
                   </div>
@@ -413,15 +529,17 @@ export default function ChatPage() {
                         >
                           {message.role === "assistant" ? (
                             <div className="break-words text-sm leading-7 [&_p]:mb-2 [&_ul]:mb-2 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:mb-2 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:mb-1 [&_code]:rounded [&_code]:bg-slate-800 [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:text-sky-300 [&_pre]:mb-3 [&_pre]:overflow-x-auto [&_pre]:rounded-xl [&_pre]:bg-slate-800 [&_pre]:p-4 [&_pre]:text-sm [&_pre_code]:bg-transparent [&_pre_code]:p-0 [&_pre_code]:text-slate-100 [&_h1]:mb-3 [&_h1]:text-xl [&_h1]:font-semibold [&_h2]:mb-2 [&_h2]:text-lg [&_h2]:font-semibold [&_h3]:mb-2 [&_h3]:text-base [&_h3]:font-medium [&_strong]:font-semibold [&_a]:text-sky-400 [&_a]:underline [&_blockquote]:mb-3 [&_blockquote]:border-l-2 [&_blockquote]:border-slate-600 [&_blockquote]:pl-4 [&_blockquote]:text-slate-400 [&_hr]:my-4 [&_hr]:border-slate-700 [&_table]:mb-3 [&_table]:w-full [&_table]:border-collapse [&_th]:border [&_th]:border-slate-700 [&_th]:px-3 [&_th]:py-2 [&_th]:text-left [&_td]:border [&_td]:border-slate-700 [&_td]:px-3 [&_td]:py-2">
-                              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                              <ReactMarkdown remarkPlugins={[remarkGfm]} components={{ img: ({ src }) => src ? <img src={src} className="max-h-64 rounded-xl my-2" /> : null }}>
                                 {message.content || "Thinking..."}
                               </ReactMarkdown>
                             </div>
-                          ) : (
-                            <p className="whitespace-pre-wrap break-words text-sm leading-7">
-                              {message.content}
-                            </p>
-                          )}
+                          ) : message.content ? (
+                            <div className="break-words text-sm leading-7 [&_p]:mb-2">
+                              <ReactMarkdown remarkPlugins={[remarkGfm]} components={{ img: ({ src }) => src ? <img src={src} className="max-h-64 rounded-xl my-2" /> : null }}>
+                                {message.content}
+                              </ReactMarkdown>
+                            </div>
+                          ) : null}
                         </div>
                       </div>
                     ))
@@ -480,8 +598,73 @@ export default function ChatPage() {
                       e.preventDefault();
                       handleSend();
                     }}
-                    className="flex gap-3"
+                    className="relative flex gap-3"
                   >
+                    {selectedImage && (
+                      <div className="absolute bottom-full left-0 mb-2 flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-900 p-2">
+                        <img
+                          src={selectedImage}
+                          alt="Preview"
+                          className="h-16 w-16 rounded-lg object-cover"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setSelectedImage(null)}
+                          className="rounded-full p-1 text-slate-400 hover:bg-slate-800 hover:text-slate-200"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+                            <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z" />
+                          </svg>
+                        </button>
+                      </div>
+                    )}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      ref={fileInputRef}
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        const reader = new FileReader();
+                        reader.onload = () => {
+                          setSelectedImage(reader.result as string);
+                        };
+                        reader.readAsDataURL(file);
+                        e.target.value = "";
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="inline-flex min-h-[48px] w-12 shrink-0 items-center justify-center rounded-2xl border border-slate-800 bg-slate-950 text-slate-400 transition hover:border-slate-600 hover:text-slate-200"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5">
+                        <path fillRule="evenodd" d="M1.5 6a2.25 2.25 0 012.25-2.25h16.5A2.25 2.25 0 0122.5 6v12a2.25 2.25 0 01-2.25 2.25H3.75A2.25 2.25 0 011.5 18V6zM3 16.06V18c0 .414.336.75.75.75h16.5A.75.75 0 0021 18v-1.94l-2.69-2.689a1.5 1.5 0 00-2.12 0l-.88.879.97.97a.75.75 0 11-1.06 1.06l-5.16-5.159a1.5 1.5 0 00-2.12 0L3 16.061zm10.125-7.81a1.125 1.125 0 112.25 0 1.125 1.125 0 01-2.25 0z" clipRule="evenodd" />
+                      </svg>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={toggleListening}
+                      disabled={loading}
+                      className={`inline-flex min-h-[48px] w-12 shrink-0 items-center justify-center rounded-2xl border text-slate-400 transition hover:border-slate-600 hover:text-slate-200 disabled:cursor-not-allowed disabled:opacity-50 ${
+                        listening
+                          ? "border-red-500 bg-red-500/20 text-red-400 shadow-lg shadow-red-500/30"
+                          : "border-slate-800 bg-slate-950"
+                      }`}
+                    >
+                      {listening ? (
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5 animate-pulse">
+                          <path d="M8.25 4.5a3.75 3.75 0 117.5 0v8.25a3.75 3.75 0 11-7.5 0V4.5z" />
+                          <path d="M6 10.5a.75.75 0 01.75.75v1.5a5.25 5.25 0 1010.5 0v-1.5a.75.75 0 011.5 0v1.5a6.751 6.751 0 01-6 6.709v2.291h3a.75.75 0 010 1.5h-8.5a.75.75 0 010-1.5h3v-2.291a6.751 6.751 0 01-6-6.709v-1.5A.75.75 0 016 10.5z" />
+                        </svg>
+                      ) : (
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5">
+                          <path d="M8.25 4.5a3.75 3.75 0 117.5 0v8.25a3.75 3.75 0 11-7.5 0V4.5z" />
+                          <path d="M6 10.5a.75.75 0 01.75.75v1.5a5.25 5.25 0 1010.5 0v-1.5a.75.75 0 011.5 0v1.5a6.751 6.751 0 01-6 6.709v2.291h3a.75.75 0 010 1.5h-8.5a.75.75 0 010-1.5h3v-2.291a6.751 6.751 0 01-6-6.709v-1.5A.75.75 0 016 10.5z" />
+                        </svg>
+                      )}
+                    </button>
                     <input
                       value={input}
                       onChange={(e) => setInput(e.target.value)}

@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { createClient, getAIAuthToken } from "@/lib/supabase";
 
 const NVIDIA_API = "https://integrate.api.nvidia.com/v1/chat/completions";
-const MODEL = "nvidia/nvidia-nemotron-nano-9b-v2";
+const MODEL = "minimaxai/minimax-m3";
 
 const MASTERY_RUBRIC = `
 Mastery level rubric (assess after each response):
@@ -110,6 +110,20 @@ export async function POST(request: Request) {
   const history: { role: string; content: string }[] =
     Array.isArray(body.messages) ? body.messages : [];
 
+  const images: string[] = Array.isArray(body.images) ? body.images : [];
+
+  function parseContent(content: string): { text: string; extractedImages: string[] } {
+    const imgRegex = /!\[([^\]]*)\]\(data:([^)]+)\)/g;
+    const extractedImages: string[] = [];
+    let text = content;
+    let match;
+    while ((match = imgRegex.exec(content)) !== null) {
+      extractedImages.push(`data:${match[2]}`);
+      text = text.replace(match[0], "");
+    }
+    return { text: text.trim(), extractedImages };
+  }
+
   const subject = typeof body.subject === "string" && body.subject.trim() !== "" ? body.subject.trim() : null;
   const concept = typeof body.concept === "string" && body.concept.trim() !== "" ? body.concept.trim() : null;
 
@@ -149,17 +163,44 @@ export async function POST(request: Request) {
 
   const systemPrompt = buildSystemPrompt(subject, concept, row);
 
-  const apiMessages: { role: string; content: string }[] = [
+  type ApiContent = string | { type: "text"; text: string } | { type: "image_url"; image_url: { url: string } };
+  const apiMessages: { role: string; content: string | ApiContent[] }[] = [
     { role: "system", content: systemPrompt },
   ];
 
   for (const msg of history) {
     if (msg.role === "user" || msg.role === "assistant") {
-      apiMessages.push({ role: msg.role, content: msg.content });
+      if (msg.role === "user") {
+        const { text, extractedImages } = parseContent(msg.content);
+        if (extractedImages.length > 0) {
+          apiMessages.push({
+            role: "user",
+            content: [
+              { type: "text", text },
+              ...extractedImages.map((url) => ({ type: "image_url" as const, image_url: { url } })),
+            ],
+          });
+        } else {
+          apiMessages.push({ role: "user", content: text });
+        }
+      } else {
+        apiMessages.push({ role: "assistant", content: msg.content });
+      }
     }
   }
 
-  apiMessages.push({ role: "user", content: `Student asks: ${body.userMessage}` });
+  const allImages = [...parseContent(body.userMessage).extractedImages, ...images];
+  if (allImages.length > 0) {
+    apiMessages.push({
+      role: "user",
+      content: [
+        { type: "text", text: `Student asks: ${body.userMessage}` },
+        ...allImages.map((url) => ({ type: "image_url" as const, image_url: { url } })),
+      ],
+    });
+  } else {
+    apiMessages.push({ role: "user", content: `Student asks: ${body.userMessage}` });
+  }
 
   try {
     const nvidiaResponse = await fetch(NVIDIA_API, {

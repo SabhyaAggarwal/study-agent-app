@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import { getAIAuthToken } from "@/lib/supabase";
 
 const NVIDIA_API = "https://integrate.api.nvidia.com/v1/chat/completions";
-const MODEL = "meta/llama-3.2-3b-instruct";
+const MODEL = "minimaxai/minimax-m3";
 
 export async function POST(request: NextRequest) {
   const authToken = getAIAuthToken();
@@ -15,9 +15,9 @@ export async function POST(request: NextRequest) {
   }
 
   const body = await request.json();
-  const { userMessage } = body;
+  const { userMessage, image } = body;
 
-  if (!userMessage) {
+  if (!userMessage && !image) {
     return new Response(JSON.stringify({ subject: "", concept: "" }), {
       status: 400,
       headers: { "Content-Type": "application/json" },
@@ -35,12 +35,28 @@ export async function POST(request: NextRequest) {
     .map((e) => `Message: ${e.msg}\n{"subject": "${e.subject}", "concept": "${e.concept}"}`)
     .join("\n\n");
 
-  const prompt = `From the message, identify the academic subject and the specific concept. Return ONLY a raw JSON object with "subject" and "concept" fields — no markdown, no code fences, no explanation.
+  const textPrompt = `From the message, identify the academic subject and the specific concept. If an image is provided, also consider its content. Return ONLY a raw JSON object with "subject" and "concept" fields — no markdown, no code fences, no explanation.
 
 Examples:
 ${exampleBlock}
 
-Message: ${userMessage}`;
+Message: ${userMessage || "(no text — use the image to determine subject and concept)"}`;
+
+  const messages: { role: string; content: any }[] = [
+    { role: "system", content: "You extract academic subjects and concepts from student questions. Always respond with raw JSON only." },
+  ];
+
+  if (image) {
+    messages.push({
+      role: "user",
+      content: [
+        { type: "text", text: textPrompt },
+        { type: "image_url", image_url: { url: image } },
+      ],
+    });
+  } else {
+    messages.push({ role: "user", content: textPrompt });
+  }
 
   try {
     const response = await fetch(NVIDIA_API, {
@@ -51,12 +67,9 @@ Message: ${userMessage}`;
       },
       body: JSON.stringify({
         model: MODEL,
-        max_tokens: 100,
+        max_tokens: 200,
         temperature: 0.01,
-        messages: [
-          { role: "system", content: "You extract academic subjects and concepts from student questions. Always respond with raw JSON only." },
-          { role: "user", content: prompt },
-        ],
+        messages,
       }),
     });
 
